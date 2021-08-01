@@ -1,0 +1,33 @@
+<h1>Players available by session</h1>
+<div id="pbs-result"></div>
+
+<script>
+  const resultContainer = document.getElementById("pbs-result");
+
+  function formatOutputAsHTMLLists(respJson) {
+    const sessionsHTMLs = []
+    for(let session in respJson) {
+      const players = respJson[session]
+      const playersListHTML = `<ol><li>${players.join("</li><li>")}</li></ol>`
+      const sessionHTML = `<h4>${session}</h4>${playersListHTML}`
+      sessionsHTMLs.push(sessionHTML);
+    }
+    return `<div>${sessionsHTMLs.join("</div><div>")}</div>`
+  }
+
+  function fetchBreakdowns() {
+    showAlert("Fetching the data, please wait...")
+    google.script.run.withSuccessHandler(async availabilityBySession => {
+        clearAlert()
+        const votingFormName = availabilityBySession['meta']['Voting Form']
+        delete availabilityBySession['meta']
+        const header = `<p>Below are list of available players pulled from "${votingFormName}" voting sheet as of now</p>`
+        statusContainer.innerHTML = `${header}`
+        resultContainer.innerHTML = `${formatOutputAsHTMLLists(availabilityBySession)}`
+    }).withFailureHandler((error) => {
+        onFailure(error);
+    }).getSessionAvailability();
+  }
+
+  fetchBreakdowns();
+	</script>

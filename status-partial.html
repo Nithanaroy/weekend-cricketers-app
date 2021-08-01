@@ -1,0 +1,18 @@
+<p id="status"></p>
+
+<script>
+  const statusContainer = document.getElementById("status");
+
+  function onFailure(error) {
+    console.error(error);
+    showAlert("Failed to fetch the data :(", "error")
+  }
+
+  function showAlert(msg, type = "info") {
+    statusContainer.innerText = msg
+  }
+
+  function clearAlert() {
+    statusContainer.innerText = ""
+  }
+</script>
