@@ -22,10 +22,9 @@
         const votingFormName = availabilityBySession['meta']['Voting Form']
         delete availabilityBySession['meta']
         const header = `<p>Below are list of available players pulled from "${votingFormName}" voting sheet as of now</p>`
-        statusContainer.innerHTML = `${header}`
-        resultContainer.innerHTML = `${formatOutputAsHTMLLists(availabilityBySession)}`
+        resultContainer.innerHTML = `${header}${formatOutputAsHTMLLists(availabilityBySession)}`
     }).withFailureHandler((error) => {
-        onFailure(error);
+        onFailure("Failed to fetch the data :(", error);
     }).getSessionAvailability();
   }
 

@@ -1,18 +1,28 @@
-<p id="status"></p>
+<div id='statusContainer'></div>
 
 <script>
-  const statusContainer = document.getElementById("status");
+  const statusContainer = document.getElementById("statusContainer");
 
-  function onFailure(error) {
+  function onFailure(msg, error) {
     console.error(error);
-    showAlert("Failed to fetch the data :(", "error")
+    showAlert(msg, "danger")
   }
 
   function showAlert(msg, type = "info") {
-    statusContainer.innerText = msg
+    clearAlert()    
+
+    // available types - https://getbootstrap.com/docs/5.0/components/alerts/#examples
+    const alertTemplate = `
+    <div class="alert alert-dismissible fade show alert-${type}" role="alert">
+      ${msg}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>`
+    statusContainer.innerHTML = alertTemplate;
   }
 
   function clearAlert() {
-    statusContainer.innerText = ""
+    while (statusContainer.firstChild) {
+        statusContainer.removeChild(statusContainer.firstChild);
+    }
   }
 </script>
