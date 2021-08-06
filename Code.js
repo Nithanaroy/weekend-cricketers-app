@@ -1,4 +1,7 @@
 let queryParams = null;
+let constants = {
+  VOTING_FOLDER: "1ls13htyb29Skn5t32d8SqG4tkDdsB3_T"
+}
 
 function doGet(e) {
   // const htmlOut = HtmlService.createHtmlOutputFromFile("index");
@@ -11,12 +14,19 @@ function doGet(e) {
 }
 
 function include(filename) {
-  return HtmlService.createTemplateFromFile(filename)
-    .evaluate()
-    // .setSandboxMode(HtmlService.SandboxMode.IFRAME)
-    .getContent();
+  return HtmlService.createTemplateFromFile(filename).evaluate().getContent();
 }
 
 function getPage() {
   return queryParams.view || "index" // look up the `view` parameter's value
+}
+
+
+function * getAllVotingFormsGen() {
+  const folder = DriveApp.getFolderById(constants.VOTING_FOLDER) // a folder with all voting forms
+  const allForms = folder.getFilesByType(MimeType.GOOGLE_FORMS);
+  while (allForms.hasNext()) {
+    const form = allForms.next();
+    yield form
+  }
 }

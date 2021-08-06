@@ -25,7 +25,7 @@
         resultContainer.innerHTML = `${header}${formatOutputAsHTMLLists(availabilityBySession)}`
     }).withFailureHandler((error) => {
         onFailure("Failed to fetch the data :(", error);
-    }).getSessionAvailability();
+    }).getSessionAvailabilityForTheLatestPoll();
   }
 
   fetchBreakdowns();

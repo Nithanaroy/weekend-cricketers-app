@@ -1,27 +1,31 @@
 function getTheLatestVotingFormID() {
-  const folder = DriveApp.getFolderById("1ls13htyb29Skn5t32d8SqG4tkDdsB3_T") // a folder with all voting forms
-  Logger.log(folder.getName());
-  const allForms = folder.getFilesByType(MimeType.GOOGLE_FORMS);
   let latestForm = {
     form: null,
     date: new Date(1970, 1, 1)
   }
-  while (allForms.hasNext()) {
-    const form = allForms.next();
+  for (let form of getAllVotingFormsGen()) {
     if (form.getLastUpdated() > latestForm.date) {
       latestForm.date = form.getLastUpdated()
       latestForm.form = form
     }
-    Logger.log("%s was created on %s (Latest form so far: %s)", form.getName(), form.getLastUpdated().toLocaleDateString(), JSON.stringify(latestForm));
+    // Logger.log("%s was created on %s (Latest form so far: %s)", form.getName(), form.getLastUpdated().toLocaleDateString(), JSON.stringify(latestForm));
   }
-  Logger.log("Done");
   return latestForm
 }
 
-function getSessionAvailability() {
+function getSessionAvailabilityForForm(formMetaRef) {
+  /**
+   * returns, 
+   * {
+   *  meta: {
+   *    "Voting Form": "name of the voting form"
+   *  },
+   *  session-name1: [player1, player2, ...],
+   *  session-name2: [player1, player2, ...],
+   * }
+   */
   // Open a form by ID and log the responses to each question.
-  const latestForm = getTheLatestVotingFormID()
-  var form = FormApp.openById(latestForm.form.getId());
+  var form = FormApp.openById(formMetaRef.getId());
   var formResponses = form.getResponses();
   var availabilityBySession = {}
   for (var i = 0; i < formResponses.length; i++) {
@@ -44,12 +48,17 @@ function getSessionAvailability() {
           }
         }
       }
-      Logger.log('Response #%s to the question "%s" was "%s"',
-        (i + 1).toString(),
-        itemResponse.getItem().getTitle(),
-        itemResponse.getResponse());
+      // Logger.log('Response #%s to the question "%s" was "%s"',
+      // (i + 1).toString(),
+      // itemResponse.getItem().getTitle(),
+      // itemResponse.getResponse());
     }
   }
-  Logger.log('Response availability breakdown: %s', JSON.stringify(availabilityBySession, null, 2));
-  return { "meta": {"Voting Form": latestForm.form.getName()}, ...availabilityBySession }
+  // Logger.log('Response availability breakdown: %s', JSON.stringify(availabilityBySession, null, 2));
+  return { "meta": { "Voting Form": formMetaRef.getName() }, ...availabilityBySession }
+}
+
+function getSessionAvailabilityForTheLatestPoll() {
+  const latestForm = getTheLatestVotingFormID()
+  return getSessionAvailabilityForForm(latestForm.form);
 }

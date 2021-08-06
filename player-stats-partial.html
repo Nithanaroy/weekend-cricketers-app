@@ -1,3 +1,38 @@
+<link href="https://unpkg.com/bootstrap-table@1.18.3/dist/bootstrap-table.min.css" rel="stylesheet">
+<script src="https://unpkg.com/bootstrap-table@1.18.3/dist/bootstrap-table.min.js"></script>
+
 <div>
-  This is a player stats partial
+	<table id="table" data-toggle="table" data-search="true" data-search-align="left" data-pagination="true">
+		<thead>
+			<tr>
+				<!-- <th data-field="id" data-searchable="false">ID</th> -->
+				<th data-field="name" data-sortable="true">Player Name</th>
+				<th data-field="days" data-sortable="true">Days</th>
+			</tr>
+		</thead>
+	</table>
+
+	<script>
+		var $table = $('#table');
+
+    function fetchNumGameDaysPerPlayer() {
+      const startedAt = new Date().getTime();
+      $table.bootstrapTable('showLoading');
+      google.script.run.withSuccessHandler(playerTally => {
+        const duration = new Date().getTime() - startedAt;
+        showAlert(`Took ${duration}ms to complete`, "success")
+        $table.bootstrapTable('load', playerTally)
+        $table.bootstrapTable('hideLoading');
+      }).withFailureHandler((error) => {
+          onFailure("Failed to fetch the data :(", error);
+          $table.bootstrapTable('hideLoading');
+      }).getPlayCounts();
+    }
+    
+
+  $(function() {
+    $table.bootstrapTable();
+    fetchNumGameDaysPerPlayer();
+  })
+	</script>
 </div>
