@@ -1,20 +1,26 @@
 <link href="https://unpkg.com/bootstrap-table@1.18.3/dist/bootstrap-table.min.css" rel="stylesheet">
 <script src="https://unpkg.com/bootstrap-table@1.18.3/dist/bootstrap-table.min.js"></script>
 
+<style>
+  .name {
+    text-transform: capitalize;
+  }
+</style>
+
 <div>
-	<table id="table" data-toggle="table" data-search="true" data-search-align="left" data-pagination="true"
+	<table id="gameDayStatsTb" data-toggle="table" data-search="true" data-search-align="left" data-pagination="true"
 		data-sort-name="days" data-sort-order="desc">
 		<thead>
 			<tr>
 				<!-- <th data-field="id" data-searchable="false">ID</th> -->
-				<th data-field="name" data-sortable="true">Player Name</th>
-				<th data-field="days" data-sortable="true">Days</th>
+				<th data-field="name" data-sortable="true" data-formatter="nameFormatter">Player Name</th>
+				<th data-field="days" data-sortable="true" class="gameDaysHeader"># Game Days</th>
 			</tr>
 		</thead>
 	</table>
 
 	<script>
-		var $table = $('#table');
+		var $table = $('#gameDayStatsTb');
     const MIN_DURATION_TO_UPDATE_CACHE_IN_MS = 10 * 60 * 1000
 
     function updatePlayerStatsCache() {
@@ -29,6 +35,9 @@
         showAlert(`These stats were last updated at ${new Date(_meta.updatedAt)}`, "success")
         $table.bootstrapTable('load', playersTally)
         $table.bootstrapTable('hideLoading');
+        if(_meta.totalGameDays) {
+          $table.find("thead > tr > th.gameDaysHeader > div.th-inner").text(`# Game Days (of ${_meta.totalGameDays})`)
+        }
         if(new Date().getTime() - _meta.updatedAt > MIN_DURATION_TO_UPDATE_CACHE_IN_MS) {
           updatePlayerStatsCache();
         }
@@ -36,6 +45,10 @@
           onFailure("Failed to fetch the data :(", error);
           $table.bootstrapTable('hideLoading');
       }).getPlayCounts();
+    }
+
+    function nameFormatter(name, row) {
+      return `<span class="name">${name}</span>`
     }
     
 

@@ -27,6 +27,23 @@ function cachePlayDaysPerPlayer(playersStats) {
   db.setProperty(PLAYER_PLAY_DAYS_UPDATED_AT_KEY, new Date().getTime())
 }
 
+// transform a player's name such that it is uniform for grouping
+function resolvePlayerName(player) {
+  return player.trim().toLowerCase();
+}
+
+// find the most similar name to `player` in `knownPlayers` list
+// CHALLENGE: Harsha Nalajala uses Harsha as his name. Harsha Nannur used his full name. With this approach both will be merged!
+function findAliasIfAny(player, knownPlayers) {
+  for(let kp of knownPlayers) {
+    if(player.indexOf(kp) >= 0 || kp.indexOf(player)) {
+      // a sub string of this player already exists
+      return kp
+    }
+  }
+  return player
+}
+
 function getPlayDaysPerPlayer() {
   const playerGameDays = {} // days played by each player
   for (let form of getAllVotingFormsGen()) {
@@ -61,8 +78,9 @@ function getPlayDaysPerPlayer() {
 
     // add the most popular date to the tally for each player who came that day
     for (let player of attendedPlayers) {
-      player = player.trim()
-      const gameTs = gameDate.getTime()
+      player = resolvePlayerName(player);
+      const gameTs = gameDate.getTime();
+      // player = findAliasIfAny(player, Object.keys(playerGameDays))
       if (player in playerGameDays) {
         playerGameDays[player].push(gameTs)
       } else {
@@ -76,6 +94,8 @@ function getPlayDaysPerPlayer() {
 
 function getPlayCounts(season, useCache = true) {
   let playerGameDays = getPlayDaysPerPlayerFromCache() || {};
+  let uniqGameDays = new Set();
+
   if (!useCache || Object.keys(playerGameDays).length == 0) {
     playerGameDays = getPlayDaysPerPlayer();
     cachePlayDaysPerPlayer(playerGameDays)
@@ -85,10 +105,14 @@ function getPlayCounts(season, useCache = true) {
     // TODO
   } else {
     for (let player in playerGameDays) {
-      playersTally.push({ "name": player, "days": playerGameDays[player].length })
+      playersTally.push({ "name": player, "days": playerGameDays[player].length });
+      uniqGameDays = new Set([...uniqGameDays, ...playerGameDays[player]]) // add to the existing set, aka union
     }
   }
-  return { playersTally, "_meta": {"updatedAt": JSON.parse(db.getProperty(PLAYER_PLAY_DAYS_UPDATED_AT_KEY))} }
+  return { playersTally, "_meta": {
+      "updatedAt": JSON.parse(db.getProperty(PLAYER_PLAY_DAYS_UPDATED_AT_KEY)),
+      "totalGameDays": uniqGameDays.size
+    } }
 }
 
 // ********* Tests **********
