@@ -3,9 +3,9 @@
 <script>
   const statusContainer = document.getElementById("statusContainer");
 
-  function onFailure(msg, error) {
+  function onFailure(msg, error, level="danger") {
     console.error(error);
-    showAlert(msg, "danger")
+    showAlert(msg, level)
   }
 
   function showAlert(msg, type = "info") {

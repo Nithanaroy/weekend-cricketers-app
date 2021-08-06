@@ -2,7 +2,8 @@
 <script src="https://unpkg.com/bootstrap-table@1.18.3/dist/bootstrap-table.min.js"></script>
 
 <div>
-	<table id="table" data-toggle="table" data-search="true" data-search-align="left" data-pagination="true">
+	<table id="table" data-toggle="table" data-search="true" data-search-align="left" data-pagination="true"
+		data-sort-name="days" data-sort-order="desc">
 		<thead>
 			<tr>
 				<!-- <th data-field="id" data-searchable="false">ID</th> -->
@@ -14,15 +15,23 @@
 
 	<script>
 		var $table = $('#table');
+    const MIN_DURATION_TO_UPDATE_CACHE_IN_MS = 10 * 60 * 1000
+
+    function updatePlayerStatsCache() {
+        google.script.run.withFailureHandler((error) => {
+          onFailure("Server errored out when trying to update stats for future use", error, "warning");
+      }).getPlayCounts(null, false);
+    }
 
     function fetchNumGameDaysPerPlayer() {
-      const startedAt = new Date().getTime();
       $table.bootstrapTable('showLoading');
-      google.script.run.withSuccessHandler(playerTally => {
-        const duration = new Date().getTime() - startedAt;
-        showAlert(`Took ${duration}ms to complete`, "success")
-        $table.bootstrapTable('load', playerTally)
+      google.script.run.withSuccessHandler(({playersTally, _meta}) => {
+        showAlert(`These stats were last updated at ${new Date(_meta.updatedAt)}`, "success")
+        $table.bootstrapTable('load', playersTally)
         $table.bootstrapTable('hideLoading');
+        if(new Date().getTime() - _meta.updatedAt > MIN_DURATION_TO_UPDATE_CACHE_IN_MS) {
+          updatePlayerStatsCache();
+        }
       }).withFailureHandler((error) => {
           onFailure("Failed to fetch the data :(", error);
           $table.bootstrapTable('hideLoading');

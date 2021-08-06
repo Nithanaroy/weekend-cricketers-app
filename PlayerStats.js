@@ -3,6 +3,11 @@
  */
 
 const SATURDAY = 6
+const PLAYER_PLAY_DAYS_KEY = "playDaysByPlayer"
+const PLAYER_PLAY_DAYS_UPDATED_AT_KEY = "playDaysByPlayerUpdatedAt"
+const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000
+
+const db = PropertiesService.getScriptProperties();
 
 function closestSaturday(date) {
   // returns the date of the closest future Saturday for the given date
@@ -11,6 +16,15 @@ function closestSaturday(date) {
     curr.setDate(curr.getDate() + 1);
   }
   return curr
+}
+
+function getPlayDaysPerPlayerFromCache() {
+  return JSON.parse(db.getProperty(PLAYER_PLAY_DAYS_KEY));
+}
+
+function cachePlayDaysPerPlayer(playersStats) {
+  db.setProperty(PLAYER_PLAY_DAYS_KEY, JSON.stringify(playersStats))
+  db.setProperty(PLAYER_PLAY_DAYS_UPDATED_AT_KEY, new Date().getTime())
 }
 
 function getPlayDaysPerPlayer() {
@@ -48,10 +62,11 @@ function getPlayDaysPerPlayer() {
     // add the most popular date to the tally for each player who came that day
     for (let player of attendedPlayers) {
       player = player.trim()
+      const gameTs = gameDate.getTime()
       if (player in playerGameDays) {
-        playerGameDays[player].push(gameDate)
+        playerGameDays[player].push(gameTs)
       } else {
-        playerGameDays[player] = [gameDate]
+        playerGameDays[player] = [gameTs]
       }
     }
   }
@@ -59,15 +74,38 @@ function getPlayDaysPerPlayer() {
   return playerGameDays
 }
 
-function getPlayCounts(season) {
-  const playerGameDays = getPlayDaysPerPlayer()
-  const playerTally = [] // list is an easier format for the UI to process
+function getPlayCounts(season, useCache = true) {
+  let playerGameDays = getPlayDaysPerPlayerFromCache() || {};
+  if (!useCache || Object.keys(playerGameDays).length == 0) {
+    playerGameDays = getPlayDaysPerPlayer();
+    cachePlayDaysPerPlayer(playerGameDays)
+  }
+  const playersTally = [] // list is an easier format for the UI to process
   if (season) {
     // TODO
   } else {
     for (let player in playerGameDays) {
-      playerTally.push({"name": player, "days": playerGameDays[player].length})
+      playersTally.push({ "name": player, "days": playerGameDays[player].length })
     }
   }
-  return playerTally
+  return { playersTally, "_meta": {"updatedAt": JSON.parse(db.getProperty(PLAYER_PLAY_DAYS_UPDATED_AT_KEY))} }
+}
+
+// ********* Tests **********
+function testWriteDB() {
+  db.setProperties({
+    "one": JSON.stringify({ "q": [new Date().getTime()] }),
+    "two": 2
+  })
+}
+
+function testReadDB() {
+  const res = db.getProperty(PLAYER_PLAY_DAYS_UPDATED_AT_KEY)
+  Logger.log(res)
+  Logger.log(JSON.parse(res))
+  Logger.log(parseInt(res))
+}
+
+function cleanDB() {
+  db.deleteAllProperties()
 }
