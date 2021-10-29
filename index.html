@@ -12,11 +12,14 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
 
 	<div class="container">
+    <!-- Learn more about this UI syntax at https://developers.google.com/apps-script/guides/html/templates#index.html_1 -->
     <?!= include('status-partial'); ?>
 
     <? const page = getPage() ?>
     <? if(page === "player-stats") { ?>
       <?!= include('player-stats-partial'); ?>
+    <? } else if(page === "voting-form") { ?>
+      <?!= include('create-voting-form-partial'); ?>
     <? } else { ?>
       <?!= include('players-by-session-partial'); ?>
     <? } ?>

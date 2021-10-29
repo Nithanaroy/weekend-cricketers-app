@@ -2,21 +2,13 @@
  * Find the number of game days for each player
  */
 
-const SATURDAY = 6
 const PLAYER_PLAY_DAYS_KEY = "playDaysByPlayer"
 const PLAYER_PLAY_DAYS_UPDATED_AT_KEY = "playDaysByPlayerUpdatedAt"
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000
 
 const db = PropertiesService.getScriptProperties();
 
-function closestSaturday(date) {
-  // returns the date of the closest future Saturday for the given date
-  const curr = new Date(date);
-  while (curr.getDay() !== SATURDAY) {
-    curr.setDate(curr.getDate() + 1);
-  }
-  return curr
-}
+
 
 function getPlayDaysPerPlayerFromCache() {
   return JSON.parse(db.getProperty(PLAYER_PLAY_DAYS_KEY));
@@ -50,7 +42,7 @@ function findAliasIfAny(player, knownPlayers) {
 function getPlayDaysPerPlayer() {
   const playerGameDays = {} // days played by each player
   for (let form of getAllVotingFormsGen()) {
-    const sat = closestSaturday(form.getDateCreated())
+    const sat = utilsModule.closestSaturday(form.getDateCreated())
     const votingResults = getSessionAvailabilityForForm(form)
 
     // find the most popular session
