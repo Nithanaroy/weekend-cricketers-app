@@ -1,34 +1,40 @@
-<h1>Weekend Voting Form Generator</h1>
-<p class="lead">Use this page to quickly create voting form for this weekend</p>
+<h1>Weekend Cricket Voting Form</h1>
+<!-- <p class="lead">Use this page to quickly create voting form for this weekend</p> -->
 
-<button class="mt-4 btn btn-primary" onclick="generateVotingForm()" id="createFormBtn">Create form</button>
-<p class="mt-4" id="voting-form-url"></p>
+<!-- <button class="mt-4 btn btn-primary" onclick="generateVotingForm()" id="createFormBtn">Create form</button> -->
+<p class="mt-4 lead" id="voting-form-url"></p>
 
 <script>
-  const resultContainer = document.getElementById("voting-form-url");
-  const formBtn = document.getElementById("createFormBtn");
+	const resultContainer = document.getElementById("voting-form-url");
+  // const formBtn = document.getElementById("createFormBtn");
 
   function generateVotingForm() {
-    showAlert("Creating a new voting form, please wait...");
+    showAlert("Fetching the voting form, please wait...");
     google.script.run.withSuccessHandler(async formUrl => {
-        clearAlert()
-        // const header = `<p>Below are list of available players pulled from "${votingFormName}" voting sheet as of now</p>`
-        navigator.clipboard.writeText(formUrl).then(function() {
-          resultContainer.innerHTML = `
-            Here is the voting sheet URL: <a href="${formUrl}">${formUrl}</a>.
-            <br />
-            <br />
-            Also copied the voting form URL to clipboard for your convinience to share in the <a href="https://chat.whatsapp.com/GXfMYdHBE3kDK339iWHeTn">Weekend Cricketers WhatsApp</a> group!`
-        }, function() {
-          resultContainer.innerHTML = `
-            Here is the voting sheet URL: <span class="lead">${formUrl}</span>
-            <br />
-            <br />
-            Copy and share in the <a href="https://chat.whatsapp.com/GXfMYdHBE3kDK339iWHeTn">Weekeng Cricketers WhatsApp</a> group!`
-        });
+        clearAlert();
+        window.open(formUrl, "_blank");
+        // Also paste the link in the UI in case the popup is blocked or redirect fails
+        resultContainer.innerHTML = `Share your availability for some fun cricket this weekend at <a href="${formUrl}">${formUrl}</a>.`
     }).withFailureHandler((error) => {
         onFailure("Failed to generate the form :(", error);
     }).generateVotingSheetForTheWeekend();
   }
 
-	</script>
+  function copyAndShareHelper(formUrl) {
+    navigator.clipboard.writeText(formUrl).then(function() {
+      resultContainer.innerHTML = `
+        Share your availability for some fun cricket this weekend at <a href="${formUrl}">${formUrl}</a>.
+        <br />
+        <br />
+        Also copied the voting form URL to clipboard for your convinience to share in the <a href="https://chat.whatsapp.com/GXfMYdHBE3kDK339iWHeTn">Weekend Cricketers WhatsApp</a> group!`
+    }, function() {
+      resultContainer.innerHTML = `
+        Share your availability for some fun cricket this weekend at <span class="lead">${formUrl}</span>
+        <br />
+        <br />
+        Copy and share in the <a href="https://chat.whatsapp.com/GXfMYdHBE3kDK339iWHeTn">Weekeng Cricketers WhatsApp</a> group!`
+    });
+  }
+
+  generateVotingForm();
+</script>

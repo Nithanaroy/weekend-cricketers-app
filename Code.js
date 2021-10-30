@@ -21,7 +21,7 @@ function doGet(e) {
 function generateVotingSheetForTheWeekend(anyDateOfTheWeek = new Date()) {
   const votingTemplateForm = DriveApp.getFileById(constants.VOTING_TEMPLATE)
   const votingSheetsFolder = DriveApp.getFolderById(constants.VOTING_FOLDER)
-  const weekendDate = utilsModule.closestSaturday(anyDateOfTheWeek);
+  const weekendDate = utilsModule.closestWeekday(anyDateOfTheWeek, utilsModule.SUNDAY);
   const newVotingSheetName = `${weekendDate.getFullYear()}-${weekendDate.getMonth()}-${weekendDate.getDate()} Weekend`
   const thisWeekendVotingSheetsIfAny = votingSheetsFolder.getFilesByName(newVotingSheetName)
   const sheetForWeekendAlreadyExists = thisWeekendVotingSheetsIfAny.hasNext()

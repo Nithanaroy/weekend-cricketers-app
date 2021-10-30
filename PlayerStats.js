@@ -42,7 +42,7 @@ function findAliasIfAny(player, knownPlayers) {
 function getPlayDaysPerPlayer() {
   const playerGameDays = {} // days played by each player
   for (let form of getAllVotingFormsGen()) {
-    const sat = utilsModule.closestSaturday(form.getDateCreated())
+    const sat = utilsModule.closestWeekday(form.getDateCreated(), utilsModule.SATURDAY)
     const votingResults = getSessionAvailabilityForForm(form)
 
     // find the most popular session
