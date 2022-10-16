@@ -1,0 +1,106 @@
+<style>
+	.player-name {
+		text-transform: capitalize;
+	}
+</style>
+
+<div>
+  <div id="dashboard">
+    <form id="controls">      
+      Speed: 
+      <select id="speed">
+        <option value='600'>0.5x</option>
+        <option value='300'>1x</option>
+        <option value='150' selected>2x</option>
+      </select>
+
+      <button type="button" id="replay">Replay</button>
+    </form>
+    <div id="header"></div>
+	  <div id="chart"></div>
+  <div>
+
+	<script>
+    const MIN_DURATION_TO_UPDATE_CACHE_IN_MS = 10 * 60 * 1000;
+    const header = document.getElementById("header")
+    const chart = document.getElementById("chart")
+    const controls = document.getElementById("controls")
+    const speedSel = document.getElementById("speed")
+    const replayBtn = document.getElementById("replay")
+
+    const K = 22
+
+    function updatePlayerStatsCache() {
+        google.script.run.withFailureHandler((error) => {
+          onFailure("Server errored out when trying to update stats for future use", error, "warning");
+      }).getPlayDaysPerPlayerApi(false);
+    }
+
+    function renderChart(playersStats) {
+      const playerUI = (name, count) => `<li><span class='player-name'>${name}</span> (${count})</li>`
+      const playersUIs = []
+      for(let [player, count] of playersStats) {
+        playersUIs.push(playerUI(player, count))
+      }
+      chart.innerHTML = `<ol>${playersUIs.join("")}</ol>`
+    }
+
+    function* getPlayerCountsWeeklyGen(playerGameDays) {
+      const gameDays = Array.from(new Set(Object.values(playerGameDays).flat())).sort()
+      const playerRunningCount = {}
+      
+      for(let day of gameDays) {
+        for(let player in playerGameDays) {
+          playerRunningCount[player] = (playerRunningCount[player] || 0) + (playerGameDays[player].indexOf(day) >= 0 ? 1 : 0)
+        }
+
+        yield {
+          day,
+          stats: Object.entries(playerRunningCount).sort((ps1, ps2) => ps2[1] - ps1[1])
+        }
+      }
+    }
+
+    function fetchNumGameDaysPerPlayer(season) {
+      return new Promise((resolve, reject) => {
+        google.script.run.withSuccessHandler(({playerGameDays, _meta}) => {
+          showAlert(`These stats were last updated at ${new Date(_meta.updatedAt)}`, "success")
+          const speed = parseInt(speedSel.value)
+          
+          const weeklyTopK = getPlayerCountsWeeklyGen(playerGameDays)
+          const t = setInterval(() => {
+            const {value, done} = weeklyTopK.next()
+            if(done) {
+              clearInterval(t)
+              resolve()
+            } else {
+              const {day, stats} = value
+              date = new Date(day)
+              header.innerHTML = `As of ${date.getMonth() + 1}/${date.getFullYear()}`
+              renderChart(stats.slice(0, K))
+            }
+          }, speed)
+          
+
+          if(new Date().getTime() - _meta.updatedAt > MIN_DURATION_TO_UPDATE_CACHE_IN_MS) {
+            updatePlayerStatsCache();
+          }
+        }).withFailureHandler((error) => {
+            onFailure("Failed to fetch the data :(", error);
+            reject()
+        }).getPlayDaysPerPlayerApi();
+      })
+    }
+
+    async function play() {
+      $("#controls :input").prop('disabled', true);
+      await fetchNumGameDaysPerPlayer(2022);
+      $("#controls :input").prop('disabled', false);
+    }
+
+    $(function() {
+      play()
+      replayBtn.onclick = play
+    })
+	</script>
+</div>

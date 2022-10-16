@@ -75,7 +75,7 @@ function getPlayDaysPerPlayer() {
     for (let player of attendedPlayers) {
       player = resolvePlayerName(player);
       const gameTs = gameDate.getTime();
-      player = findAliasIfAny(player, Object.keys(playerGameDays))
+      // player = findAliasIfAny(player, Object.keys(playerGameDays))
       if (player in playerGameDays) {
         playerGameDays[player].push(gameTs)
       } else {
@@ -85,6 +85,21 @@ function getPlayDaysPerPlayer() {
   }
   // Logger.log(playerGameDays)
   return playerGameDays
+}
+
+function getPlayDaysPerPlayerApi(useCache = true) {
+  let playerGameDays = getPlayDaysPerPlayerFromCache() || {};
+
+  if (!useCache || Object.keys(playerGameDays).length == 0) {
+    playerGameDays = getPlayDaysPerPlayer();
+    cachePlayDaysPerPlayer(playerGameDays)
+  }
+  
+  return { playerGameDays, 
+    "_meta": {
+      "updatedAt": JSON.parse(db.getProperty(PLAYER_PLAY_DAYS_UPDATED_AT_KEY))
+    } 
+  }
 }
 
 function getPlayCounts(season, useCache = true) {
@@ -131,7 +146,8 @@ function testWriteDB() {
 }
 
 function testReadDB() {
-  const res = db.getProperty(PLAYER_PLAY_DAYS_UPDATED_AT_KEY)
+  const res = JSON.parse(db.getProperty(PLAYER_PLAY_DAYS_KEY))
+  // const res = db.getProperty(PLAYER_PLAY_DAYS_UPDATED_AT_KEY)
   Logger.log(res)
   Logger.log(JSON.parse(res))
   Logger.log(parseInt(res))
